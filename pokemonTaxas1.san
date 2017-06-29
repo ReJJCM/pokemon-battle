@@ -1,0 +1,76 @@
+
+//60 minutos é nossa unidade de tempo, ou seja, quanto dura o ciclo de caminhada do treinador 
+
+identifiers
+    
+    t1 = 1;  //O treinador encontra um adversário de 10 em 10 minutos
+    t2 = 2;  //O treinador usa um item de 30 em 30 minutos
+    t3 = 6; //O treinador Volta a caminhar de 5 em 5 minutos 
+    t4 = 2; //centro pokemon
+    t5 = 2; // pokémon envenenado
+    t6 = 2; //pokémon confuso
+    t7 = 6; //carteira guardada
+    t8 = 2; //pokémon derrotado 
+    t9 = 4; //ganhar batalha
+
+events
+
+    syn ea (t1);
+    syn ui (t2);
+    syn vc (t3);
+    syn cp (t4);
+    syn pd (t8);
+    syn va (t9);
+    loc pe (t5);
+    loc pc (t6);
+    loc gc (t7);    
+
+partial reachability = ((st TREINADOR == ANDANDO) && (st POKEMON == SAUDAVEL) && (st CARTEIRA == GUARDADA) && (st BATALHA == NAO_BATALHANDO));
+
+network BATTLE (continuous)
+
+   aut TREINADOR
+        stt ANDANDO    to (BATALHANDO) ea
+                       to (CP)         cp
+                       to (USAR_ITEM)  ui
+        stt BATALHANDO to (ANDANDO)    vc
+                       to (CP)         pd
+        stt CP         to (ANDANDO)    vc
+        stt USAR_ITEM  to (ANDANDO)    vc
+    
+    aut POKEMON
+        stt SAUDAVEL   to (DESMAIADO)  pd
+                       to (ENVENENADO) pe
+                       to (CONFUSO)    pc
+        stt DESMAIADO  to (SAUDAVEL)   cp
+        stt ENVENENADO to (SAUDAVEL)   cp ui
+        stt CONFUSO    to (SAUDAVEL)   cp ui
+                       to (ENVENENADO) pe
+
+    aut CARTEIRA
+        stt GUARDADA        to (GANHAR_DINHEIRO) va
+                            to (PERDER_DINHEIRO) pd
+        stt PERDER_DINHEIRO to (GUARDADA)        gc
+        stt GANHAR_DINHEIRO to (GUARDADA)        gc
+
+    aut BATALHA
+        stt NAO_BATALHANDO to (EM_BATALHA)     ea
+        stt EM_BATALHA     to (PERDEU_BATALHA) pd
+                           to (GANHOU_BATALHA) va
+        stt PERDEU_BATALHA to (NAO_BATALHANDO) vc
+        stt GANHOU_BATALHA to (NAO_BATALHANDO) vc
+
+results
+    TREINADOR_ANDANDO                = ((st TREINADOR == ANDANDO) && (st BATALHA == NAO_BATALHANDO) && (st CARTEIRA == GUARDADA));
+    TREINADOR_BATALHANDO             = ((st TREINADOR == BATALHANDO) && (st CARTEIRA == GUARDADA));
+    TREINADOR_CP                     = (st TREINADOR == CP);
+    TREINADOR_USAR_ITEM_ENVENENADO   = ((st TREINADOR == USAR_ITEM) && (st POKEMON == ENVENENADO));
+    TREINADOR_USAR_ITEM_CONFUSO      = ((st TREINADOR == USAR_ITEM) && (st POKEMON == CONFUSO));
+    POKEMON_CONFUSO                  = (st POKEMON == CONFUSO);
+    POKEMON_ENVENENADO               = (st POKEMON == ENVENENADO);
+    POKEMON_SAUDAVEL                 = (st POKEMON == SAUDAVEL);
+    CARTEIRA_PERDER_DINHEIRO         = ((st CARTEIRA == PERDER_DINHEIRO) &&  (st BATALHA == PERDEU_BATALHA));
+    CARTEIRA_GANHAR_DINHEIRO         = ((st CARTEIRA == GANHAR_DINHEIRO) && (st BATALHA == GANHOU_BATALHA));
+
+  
+
